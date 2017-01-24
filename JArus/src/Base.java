@@ -6,6 +6,8 @@ import java.awt.*;
 import java.awt.event.*;
 
 import java.io.*;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.*;
 
 public class Base {
@@ -19,6 +21,7 @@ public class Base {
 	//drag n drop buttons along with their dragListener
 	private JButton[] buttonArray;
 	private DragListener[] dl;
+	private String[] definitions;
 	
 	//used in writing the output
 	private String[] mainArray;
@@ -27,7 +30,19 @@ public class Base {
 	//input and output files
 	private File ipFile=null, opFile=null;
 	
+	
+	
 	public Base(){
+		URL u = getClass().getProtectionDomain().getCodeSource().getLocation();
+	    File f = null;
+		try {
+			f = new File(u.toURI());
+		} catch (URISyntaxException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	    ipFile=new File(f.getParent()+"/input.txt");
+		
 		mainFrame=new JFrame("JArus XPlorer");
 		
 		panel=new JPanel();
@@ -40,10 +55,11 @@ public class Base {
 		JPanel p=new JPanel();
 		p.setLayout(new GridLayout(3,1));
 		p.setBorder(new EmptyBorder(5, 5, 5, 5));
-		ipFileLabel=new JLabel("Select the input file here", JLabel.CENTER);
-		ipFileStatus=new JLabel("", JLabel.CENTER);
+		ipFileLabel=new JLabel("File Selected : " 
+	               + ipFile.getName(), JLabel.CENTER);
+		ipFileStatus=new JLabel("*note: for new input file, select here", JLabel.CENTER);
 		final JFileChooser  ipfileChoose = new JFileChooser();
-	    JButton ipFileSelect = new JButton("Open File");
+	    JButton ipFileSelect = new JButton("Select File");
 	    ipFileSelect.addActionListener(new ActionListener() {
 	         @Override
 	         public void actionPerformed(ActionEvent e) {
@@ -154,6 +170,17 @@ public class Base {
 			
 			String[] sarr=Arrays.copyOf(ll.toArray(), ll.toArray().length, String[].class);
 			
+			definitions=new String[sarr.length];
+			for(int i=0;i<sarr.length;i++){
+				if(sarr[i].contains(":")){
+					String[] temp=sarr[i].split(":");
+					sarr[i]=temp[0];
+					definitions[i]=temp[1];
+				}else{
+					definitions[i]=null;
+				}
+			}
+			
 			mainArray=new String[sarr.length];
 			for(int i=0;i<sarr.length;i++)
 				mainArray[i]="";
@@ -213,8 +240,17 @@ public class Base {
 			return null;
 		}
 		
-		Circles circles=new Circles(sarr[index]);
+		Circles circles=new Circles(sarr[index],definitions[index]);
 		circles.setLayout(new BoxLayout(circles, BoxLayout.Y_AXIS));
+		
+		JButton centerButton=circles.getCenterButton();
+		centerButton.addMouseListener(new MouseInputAdapter(){
+			public void mousePressed(MouseEvent me){
+				if(me.getButton()==MouseEvent.BUTTON3){
+		        	circles.getCenterPopup().show(me.getComponent(), me.getX(), me.getY()+20);
+		        }
+			}
+		});
 		
 		JButton nextButton=circles.getNextButton();
 		
@@ -266,7 +302,10 @@ public class Base {
 			buttonArray[i].setBackground(Color.ORANGE);
 			buttonArray[i].setMargin(new Insets(0, 0, 0, 0));
 			
-			dl[i]=new DragListener();
+			if(definitions[i]==null)
+				dl[i]=new DragListener();
+			else
+				dl[i]=new DragListener(definitions[i]);
 			buttonArray[i].addMouseListener(dl[i]);
 			buttonArray[i].addMouseMotionListener(dl[i]);
 			
@@ -285,11 +324,23 @@ public class Base {
 	    Point location;
 	    MouseEvent pressed;
 	    int x,y;
+	    
+	    JPopupMenu buttonPopup = new JPopupMenu("Popup");
+	    
+	    public DragListener(){
+	    	buttonPopup.add(new JLabel("no definition..."));
+	    }
+	    public DragListener(String def){
+	    	buttonPopup.add(new JLabel(def));
+	    }
 	 
 	    public void mousePressed(MouseEvent me){
 	        pressed = me;
 	        Component component = me.getComponent();
 	        component.setBackground(Color.CYAN);
+	        if(me.getButton()==MouseEvent.BUTTON3){
+	        	buttonPopup.show(me.getComponent(), me.getX(), me.getY()+10);
+	        }
 	    }
 	 
 	    public void mouseDragged(MouseEvent me){

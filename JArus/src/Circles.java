@@ -7,11 +7,13 @@ public class Circles extends JPanel{
 	private JButton centerButton, nextButton=new JButton("next");
 	private JLabel[] labelArray=null;
 	private int xPoint, yPoint;
+	private JPopupMenu centerPopup = new JPopupMenu("Popup");
 	
-	public Circles(String bstr){
+	public Circles(String bstr,String def){
 		centerButton=new JButton(bstr);
 		centerButton.setBackground(Color.RED);
 		centerButton.setForeground(Color.WHITE);
+		centerPopup.add(new JLabel(def));
 	}
 	
 	public int getCenterX(){
@@ -22,6 +24,12 @@ public class Circles extends JPanel{
 	}
 	public JButton getNextButton(){
 		return nextButton;
+	}
+	public JButton getCenterButton(){
+		return centerButton;
+	}
+	public JPopupMenu getCenterPopup(){
+		return centerPopup;
 	}
      
     public void paintComponent(Graphics g){
